@@ -4,17 +4,38 @@ services:
     restart: always
     build: ./frontend
     ports:
-      - '3000:3000'
+      - '3000:3000' # local port 3000 is mapped to the container 3000 port
     volumes:
       - /app/node_modules # prevent the local node_modules folder to be overriden
       - ./frontend:/app
     environment:
       - CHOKIDAR_USEPOLLING=true # make the chages to be synchronized immediately.
   api:
-    restart: always
-    build: ./api
+    restart: always # the container restarts in case of failure. 
+    build: ./api # Uses the "Dockerfile" located in the "api" folder to build the container. 
     ports:
       - '5050:5050'
     volumes:
-      - ./api:/app
-    
+      - ./api:/app # the local "api" folder will be mapped to the folder "app" inside the container. 
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data:/data/db # The volume is mapped to the folder "/data/db" inside the container
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo # name of the servervice from above to connect with. 
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+      # ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/  
+    depends_on:
+      - mongo # the container will be started only after the mongo container. 
+volumes:
+  mongodb_data: # Creates the volume. 
